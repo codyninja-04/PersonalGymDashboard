@@ -6,6 +6,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 
 export interface AuthResult {
   error?: string;
+  message?: string;
 }
 
 export async function signUpAction(formData: FormData): Promise<AuthResult> {
@@ -16,12 +17,17 @@ export async function signUpAction(formData: FormData): Promise<AuthResult> {
   if (password.length < 6) return { error: "Password must be at least 6 characters" };
 
   const supabase = await createServerSupabase();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { name: name || email.split("@")[0] } },
   });
   if (error) return { error: error.message };
+
+  // Email confirmation required — no active session yet
+  if (!data.session) {
+    return { message: "Check your inbox and click the confirmation link, then log in." };
+  }
 
   revalidatePath("/", "layout");
   redirect("/dashboard");

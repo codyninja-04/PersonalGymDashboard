@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Loader2, ArrowRight, AlertCircle } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { signInAction, signUpAction } from "@/app/auth/actions";
 
 type Mode = "signin" | "signup";
@@ -11,13 +11,16 @@ type Mode = "signin" | "signup";
 export function AuthForm({ mode }: { mode: Mode }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   function submit(formData: FormData) {
     setError(null);
+    setMessage(null);
     startTransition(async () => {
       const result =
         mode === "signin" ? await signInAction(formData) : await signUpAction(formData);
       if (result?.error) setError(result.error);
+      if (result?.message) setMessage(result.message);
     });
   }
 
@@ -101,6 +104,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
               <div className="flex items-start gap-2 rounded-lg border border-[var(--color-accent-primary)]/40 bg-[var(--color-accent-primary-soft)] px-3 py-2 text-[12px] text-[var(--color-accent-primary)]">
                 <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                 <span>{error}</span>
+              </div>
+            )}
+            {message && (
+              <div className="flex items-start gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-[12px] text-green-400">
+                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                <span>{message}</span>
               </div>
             )}
 

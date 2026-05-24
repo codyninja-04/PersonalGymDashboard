@@ -12,7 +12,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
-import { PHASE_KEYS, PHASES, phaseToGoal, type PhaseKey } from "@/lib/data/phases";
+import { PHASE_KEYS, PHASES, phaseToGoal, resolvePhaseKey, type PhaseKey } from "@/lib/data/phases";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useAppStore } from "@/lib/store/useAppStore";
@@ -29,7 +29,7 @@ const STANCE_ICON: Record<string, LucideIcon> = {
 export function PhaseSelector() {
   const user = useAppStore((s) => s.user);
   const hydrate = useAppStore((s) => s.hydrate);
-  const [selected, setSelected] = useState<PhaseKey>(user.phase as PhaseKey);
+  const [selected, setSelected] = useState<PhaseKey>(resolvePhaseKey(user.phase));
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
