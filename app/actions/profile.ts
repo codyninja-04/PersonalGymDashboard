@@ -22,8 +22,7 @@ export async function updateProfileAction(input: {
 
   const { error } = await supabase
     .from("profiles")
-    .update({ ...input, updated_at: new Date().toISOString() })
-    .eq("id", user.id);
+    .upsert({ id: user.id, ...input, updated_at: new Date().toISOString() });
 
   if (error) return { error: error.message };
   revalidatePath("/dashboard", "layout");
