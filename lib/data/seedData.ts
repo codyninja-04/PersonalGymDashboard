@@ -9,11 +9,14 @@ export const ANAND_USER: UserProfile = {
   heightCm: 178,
   currentWeightKg: 72,
   estimatedBF: 0.21,
-  goal: "recomp",
-  phase: "Aggressive Cut · Month 1",
+  goal: "cut",
+  phase: "cut-aggressive",
   targetBF: 0.11,
 };
 
+// Legacy hardcoded macros — kept as a fallback only.
+// Real targets are now computed dynamically via lib/calculations/macros.ts
+// based on the user's current phase + weight.
 export const ANAND_NUTRITION = {
   gymDays: { calories: 2050, protein: 148, carbs: 195, fats: 57 },
   restDays: { calories: 1750, protein: 145, carbs: 110, fats: 50 },

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useAppStore } from "@/lib/store/useAppStore";
 import { useBodyMetrics } from "@/hooks/useBodyMetrics";
 import { updateProfileAction } from "@/app/actions/profile";
+import { PhaseSelector } from "@/components/settings/PhaseSelector";
 
 export default function SettingsPage() {
   const user = useAppStore((s) => s.user);
@@ -168,18 +169,20 @@ export default function SettingsPage() {
         </Card>
       </div>
 
+      <PhaseSelector />
+
       <Card>
         <CardHeader
           eyebrow="objectives · long horizon"
-          action={<Badge variant="primary" glow><Target className="h-3 w-3" /> 6-month arc</Badge>}
+          action={<Badge variant="primary" glow><Target className="h-3 w-3" /> the arc</Badge>}
         >
           Mission Parameters
         </CardHeader>
         <CardBody>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Mission step="01" title="Reach target BF" desc="Cut phase complete. Visible abs. Sustainable maintenance setpoint." accent="var(--color-accent-primary)" />
-            <Mission step="02" title="Restore legs" desc="Injury heals → reintroduce squat/RDL once medically cleared." accent="var(--color-accent-tertiary)" />
-            <Mission step="03" title="Lean bulk +4kg" desc="Slow surplus, +0.25kg/wk. Hold BF under 16%." accent="var(--color-accent-secondary)" />
+            <Mission step="01" title="Reach target BF" desc="Cut phase complete. Visible abs. Sustainable maintenance setpoint." accent="var(--color-bone)" />
+            <Mission step="02" title="Restore legs" desc="Injury heals → reintroduce squat/RDL once medically cleared." accent="var(--color-chrome)" />
+            <Mission step="03" title="Lean bulk +4kg" desc="Slow surplus, +0.25kg/wk. Hold BF under 16%." accent="var(--color-cream)" />
           </div>
         </CardBody>
       </Card>

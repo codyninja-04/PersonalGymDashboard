@@ -3,28 +3,24 @@
 import { create } from "zustand";
 import type { MealEntry } from "@/types/nutrition";
 import type { DBDailyFuel } from "@/types/db";
-import { ANAND_NUTRITION } from "@/lib/data/seedData";
+import type { UserProfile } from "@/types/user";
 import { GYM_DAYS } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
 import { saveFuelAction } from "@/app/actions/fuel";
-
-interface Macros {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-}
+import { macrosForToday, type MacroTargets } from "@/lib/calculations/macros";
+import { ANAND_USER } from "@/lib/data/seedData";
 
 interface NutritionState {
-  targets: Macros;
-  today: Macros;
+  targets: MacroTargets;
+  today: MacroTargets;
   mealLog: MealEntry[];
   creatineTaken: boolean;
   waterLiters: number;
   todayKey: string;
   hydrated: boolean;
 
-  hydrate: (fuel: DBDailyFuel | null) => void;
+  hydrate: (fuel: DBDailyFuel | null, user?: UserProfile) => void;
+  recomputeTargets: (user: UserProfile) => void;
   logMeal: (meal: Omit<MealEntry, "id" | "timestamp">) => Promise<void>;
   deleteMeal: (id: string) => Promise<void>;
   toggleCreatine: () => Promise<void>;
@@ -35,16 +31,12 @@ function isGymDay(): boolean {
   return GYM_DAYS.includes(getDayKey());
 }
 
-function targets(): Macros {
-  return isGymDay() ? ANAND_NUTRITION.gymDays : ANAND_NUTRITION.restDays;
-}
-
-function emptyMacros(): Macros {
+function emptyMacros(): MacroTargets {
   return { calories: 0, protein: 0, carbs: 0, fats: 0 };
 }
 
 export const useNutritionStore = create<NutritionState>()((set, get) => ({
-  targets: targets(),
+  targets: macrosForToday(ANAND_USER, isGymDay()),
   today: emptyMacros(),
   mealLog: [],
   creatineTaken: false,
@@ -52,11 +44,13 @@ export const useNutritionStore = create<NutritionState>()((set, get) => ({
   todayKey: new Date().toISOString().slice(0, 10),
   hydrated: false,
 
-  hydrate: (fuel) => {
+  hydrate: (fuel, user) => {
     const today = new Date().toISOString().slice(0, 10);
+    const profile = user ?? ANAND_USER;
+    const targets = macrosForToday(profile, isGymDay());
     if (!fuel) {
       set({
-        targets: targets(),
+        targets,
         today: emptyMacros(),
         mealLog: [],
         creatineTaken: false,
@@ -67,7 +61,7 @@ export const useNutritionStore = create<NutritionState>()((set, get) => ({
       return;
     }
     set({
-      targets: targets(),
+      targets,
       today: {
         calories: fuel.calories,
         protein: fuel.protein,
@@ -80,6 +74,10 @@ export const useNutritionStore = create<NutritionState>()((set, get) => ({
       todayKey: today,
       hydrated: true,
     });
+  },
+
+  recomputeTargets: (user) => {
+    set({ targets: macrosForToday(user, isGymDay()) });
   },
 
   logMeal: async (meal) => {

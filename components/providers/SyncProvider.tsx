@@ -14,6 +14,8 @@ export function SyncProvider({
 }) {
   const hydrateApp = useAppStore((s) => s.hydrate);
   const hydrateNutrition = useNutritionStore((s) => s.hydrate);
+  const user = useAppStore((s) => s.user);
+  const recomputeTargets = useNutritionStore((s) => s.recomputeTargets);
   const done = useRef(false);
 
   useEffect(() => {
@@ -22,6 +24,11 @@ export function SyncProvider({
     hydrateApp(bundle);
     hydrateNutrition(bundle.todayFuel);
   }, [bundle, hydrateApp, hydrateNutrition]);
+
+  // Recompute nutrition targets whenever the user profile (phase / weight) changes
+  useEffect(() => {
+    recomputeTargets(user);
+  }, [user, recomputeTargets]);
 
   return <>{children}</>;
 }

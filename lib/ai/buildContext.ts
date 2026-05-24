@@ -6,6 +6,7 @@ import type { UserProfile } from "@/types/user";
 import type { WeightEntry, BFEntry } from "@/types/metrics";
 import type { PersonalRecord, WorkoutSession } from "@/types/workout";
 import type { MealEntry } from "@/types/nutrition";
+import { getPhase } from "@/lib/data/phases";
 
 export interface UserContextInput {
   user: UserProfile;
@@ -41,11 +42,22 @@ export function buildUserContext(input: UserContextInput): string {
   const startBF = bfs[0]?.bf ?? user.estimatedBF;
   const bfDelta = recentBF - startBF;
 
+  const phase = getPhase(user.phase);
+
   const lines: string[] = [];
   lines.push(`# Athlete profile`);
   lines.push(`name: ${user.name}, age ${user.age}, ${user.gender}, ${user.heightCm}cm`);
   lines.push(`current: ${fmtNum(user.currentWeightKg)}kg @ ${fmtNum(user.estimatedBF * 100)}% BF`);
-  lines.push(`goal: ${user.goal} · target ${fmtNum(user.targetBF * 100, 0)}% BF · phase: ${user.phase}`);
+  lines.push(`goal: ${user.goal} · target ${fmtNum(user.targetBF * 100, 0)}% BF`);
+
+  lines.push(`\n# Current phase: ${phase.label} (${phase.stance})`);
+  lines.push(`philosophy: ${phase.philosophy}`);
+  lines.push(`priority: ${phase.priority}`);
+  lines.push(`caloric stance: ${Math.round((phase.caloricMultiplier - 1) * 100)}% vs TDEE`);
+  lines.push(`weekly weight target: ${phase.weeklyWeightChangeKg >= 0 ? "+" : ""}${phase.weeklyWeightChangeKg}kg`);
+  lines.push(`training RPE band: ${phase.rpeBand[0]}-${phase.rpeBand[1]}, ${phase.repBias} bias`);
+  lines.push(`cardio: ${phase.cardioPerWeek}× / wk · deload every ${phase.deloadEveryWeeks || "n/a"} wks`);
+  lines.push(`common pitfall: ${phase.watchOut}`);
 
   lines.push(`\n# Recent trends`);
   lines.push(`weight 7d: ${weekDelta >= 0 ? "+" : ""}${fmtNum(weekDelta)}kg`);
