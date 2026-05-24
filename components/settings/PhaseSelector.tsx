@@ -66,6 +66,8 @@ export function PhaseSelector() {
         prs: [],
         sessions: [],
         todayFuel: null,
+        recentFuel: [],
+        measurements: [],
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);

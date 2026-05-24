@@ -16,6 +16,8 @@ interface WeekPlan {
   sessions: WorkoutSession[];
 }
 
+import type { DBDailyFuel, DBBodyMeasurement } from "@/types/db";
+
 interface AppState {
   user: UserProfile;
   weightHistory: WeightEntry[];
@@ -24,6 +26,8 @@ interface AppState {
   lastWorkoutDate: string | null;
   personalRecords: PersonalRecord[];
   weekPlan: WeekPlan;
+  recentFuel: DBDailyFuel[];
+  measurements: DBBodyMeasurement[];
   hydrated: boolean;
   syntheticData: boolean;
 
@@ -66,6 +70,8 @@ export const useAppStore = create<AppState>()((set) => ({
   lastWorkoutDate: null,
   personalRecords: [],
   weekPlan: { planned: 4, completed: 0, sessions: [] },
+  recentFuel: [],
+  measurements: [],
   hydrated: false,
   syntheticData: false,
 
@@ -136,6 +142,8 @@ export const useAppStore = create<AppState>()((set) => ({
       },
       streak: computeStreak(realSessions),
       lastWorkoutDate: realSessions[0]?.date ?? null,
+      recentFuel: bundle.recentFuel ?? [],
+      measurements: bundle.measurements ?? [],
       hydrated: true,
       syntheticData: useFallback,
     });

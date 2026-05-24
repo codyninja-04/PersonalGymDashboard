@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   Beef,
+  Camera,
   ChevronUp,
   Dumbbell,
   Flame,
@@ -24,6 +25,7 @@ const NAV = [
   { href: "/dashboard/analytics", label: "Progress", icon: LineChart },
   { href: "/dashboard/workout", label: "Train", icon: Dumbbell },
   { href: "/dashboard/fuel", label: "Fuel", icon: Beef },
+  { href: "/dashboard/body", label: "Body", icon: Camera },
   { href: "/dashboard/settings", label: "Profile", icon: Settings },
 ];
 

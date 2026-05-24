@@ -13,13 +13,64 @@ import { IntentSetter } from "@/components/dashboard/IntentSetter";
 import { SpotifyPlayer } from "@/components/dashboard/SpotifyPlayer";
 import { StallDiagnosisCard } from "@/components/dashboard/StallDiagnosisCard";
 import { PhaseCard } from "@/components/dashboard/PhaseCard";
+import { PhaseChecklist } from "@/components/dashboard/PhaseChecklist";
+import { DeloadBanner } from "@/components/dashboard/DeloadBanner";
+import { LifestyleQuickLog } from "@/components/dashboard/LifestyleQuickLog";
+import { createServerSupabase, isSupabaseConfigured } from "@/lib/supabase/server";
 
-export default function DashboardPage() {
+async function loadDeloadContext() {
+  if (!isSupabaseConfigured()) return { last_deload_at: null, phase_started_at: null };
+  try {
+    const supabase = await createServerSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { last_deload_at: null, phase_started_at: null };
+    const { data } = await supabase
+      .from("profiles")
+      .select("last_deload_at, phase_started_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    return {
+      last_deload_at: (data?.last_deload_at as string | null) ?? null,
+      phase_started_at: (data?.phase_started_at as string | null) ?? null,
+    };
+  } catch {
+    return { last_deload_at: null, phase_started_at: null };
+  }
+}
+
+async function loadLifestyleToday() {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = await createServerSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("daily_fuel")
+      .select("sleep_hours, steps, energy_rating, soreness_rating")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .maybeSingle();
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function DashboardPage() {
+  const [deloadCtx, lifestyleToday] = await Promise.all([loadDeloadContext(), loadLifestyleToday()]);
+
   return (
     <div className="space-y-6">
       <TopBar />
       <HeroBanner />
       <PhilosophyTicker />
+
+      <PhaseChecklist />
+      <DeloadBanner
+        lastDeloadAt={deloadCtx.last_deload_at}
+        phaseStartedAt={deloadCtx.phase_started_at}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <IntentSetter />
@@ -45,6 +96,18 @@ export default function DashboardPage() {
         </div>
         <div className="space-y-4">
           <SpotifyPlayer />
+          <LifestyleQuickLog
+            initial={
+              lifestyleToday
+                ? {
+                    sleep_hours: lifestyleToday.sleep_hours as number | null,
+                    steps: lifestyleToday.steps as number | null,
+                    energy_rating: lifestyleToday.energy_rating as number | null,
+                    soreness_rating: lifestyleToday.soreness_rating as number | null,
+                  }
+                : undefined
+            }
+          />
           <QuickActions />
         </div>
       </div>

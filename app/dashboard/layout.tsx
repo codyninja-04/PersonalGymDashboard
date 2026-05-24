@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const bundle = supabaseConfigured
     ? await fetchSyncBundle()
-    : { profile: null, weights: [], bfs: [], prs: [], sessions: [], todayFuel: null };
+    : { profile: null, weights: [], bfs: [], prs: [], sessions: [], todayFuel: null, recentFuel: [], measurements: [] };
 
   return (
     <SyncProvider bundle={bundle}>

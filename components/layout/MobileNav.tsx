@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, LineChart, NotebookText, Beef, Settings } from "lucide-react";
+import { Zap, LineChart, NotebookText, Beef, Camera, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/formatting";
 
 const NAV = [
-  { href: "/dashboard", label: "Dash", icon: Zap },
-  { href: "/dashboard/analytics", label: "Gains", icon: LineChart },
+  { href: "/dashboard", label: "Today", icon: Zap },
   { href: "/dashboard/workout", label: "Lift", icon: NotebookText },
   { href: "/dashboard/fuel", label: "Fuel", icon: Beef },
-  { href: "/dashboard/settings", label: "Profile", icon: Settings },
+  { href: "/dashboard/body", label: "Body", icon: Camera },
+  { href: "/dashboard/analytics", label: "Stats", icon: LineChart },
+  { href: "/dashboard/settings", label: "You", icon: Settings },
 ];
 
 export function MobileNav() {

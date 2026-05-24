@@ -14,6 +14,30 @@ export interface DBProfile {
   onboarded: boolean;
   created_at: string;
   updated_at: string;
+  phase_started_at?: string | null;
+  last_deload_at?: string | null;
+}
+
+export interface DBBodyMeasurement {
+  id: string;
+  user_id: string;
+  date: string;
+  waist_cm: number | null;
+  chest_cm: number | null;
+  arm_cm: number | null;
+  neck_cm: number | null;
+  thigh_cm: number | null;
+  hip_cm: number | null;
+  notes: string | null;
+}
+
+export interface DBProgressPhoto {
+  id: string;
+  user_id: string;
+  date: string;
+  pose: "front" | "side" | "back" | "double-bi";
+  storage_path: string;
+  notes: string | null;
 }
 
 export interface DBWeightLog {
@@ -63,4 +87,9 @@ export interface DBDailyFuel {
   water_liters: number;
   creatine_taken: boolean;
   meals: unknown[];
+  sleep_hours?: number | null;
+  steps?: number | null;
+  energy_rating?: number | null;
+  soreness_rating?: number | null;
+  notes?: string | null;
 }

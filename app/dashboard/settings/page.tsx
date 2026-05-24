@@ -50,6 +50,8 @@ export default function SettingsPage() {
         prs: [],
         sessions: [],
         todayFuel: null,
+        recentFuel: [],
+        measurements: [],
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
