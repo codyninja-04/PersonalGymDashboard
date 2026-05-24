@@ -11,6 +11,7 @@ import { PRFeed } from "@/components/dashboard/PRFeed";
 import { DailyQuote } from "@/components/dashboard/DailyQuote";
 import { IntentSetter } from "@/components/dashboard/IntentSetter";
 import { SpotifyPlayer } from "@/components/dashboard/SpotifyPlayer";
+import { StallDiagnosisCard } from "@/components/dashboard/StallDiagnosisCard";
 
 export default function DashboardPage() {
   return (
@@ -23,6 +24,8 @@ export default function DashboardPage() {
         <IntentSetter />
         <DailyQuote />
       </div>
+
+      <StallDiagnosisCard />
 
       <KPIGrid />
 

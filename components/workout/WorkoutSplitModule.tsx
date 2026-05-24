@@ -6,6 +6,7 @@ import { Play, Pause, Coffee, Dumbbell, Sparkles, Eye } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ExerciseRow } from "./ExerciseRow";
+import { AutoScaleButton } from "./AutoScaleButton";
 import { ANAND_SPLITS } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
 import { useWorkoutStore } from "@/lib/store/useWorkoutStore";
@@ -84,6 +85,7 @@ export function WorkoutSplitModule() {
                 <Sparkles className="h-3 w-3" />
                 {completedExercises}/{totalExercises}
               </Badge>
+              <AutoScaleButton splitName={split.name} />
               <button
                 type="button"
                 onClick={() => {

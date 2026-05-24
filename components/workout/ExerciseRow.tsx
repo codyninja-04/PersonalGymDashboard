@@ -6,6 +6,7 @@ import { Check, ChevronDown, Clock, Skull, Loader2 } from "lucide-react";
 import type { Exercise, SetLog, SetStatus } from "@/types/workout";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressiveOverloadBadge } from "./ProgressiveOverloadBadge";
+import { ExerciseSwapButton } from "./ExerciseSwapButton";
 import { useWorkoutStore } from "@/lib/store/useWorkoutStore";
 import { cn } from "@/lib/utils/formatting";
 
@@ -100,6 +101,12 @@ export function ExerciseRow({ exercise, suggestedWeight = 0, showOverload = fals
             className="overflow-hidden"
           >
             <div className="border-t border-border-subtle px-4 py-4">
+              <div className="mb-3 flex items-center justify-end">
+                <ExerciseSwapButton
+                  exerciseName={exercise.name}
+                  primaryMuscle={exercise.primary}
+                />
+              </div>
               <div className="mb-2 hidden grid-cols-[32px_1fr_1fr_1fr_84px] gap-2 font-mono text-[9px] uppercase tracking-[0.18em] text-text-dim sm:grid">
                 <span>#</span>
                 <span>weight kg</span>

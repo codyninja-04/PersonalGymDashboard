@@ -7,6 +7,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MacroRingCard } from "@/components/kpi/MacroRingCard";
+import { MealSuggester } from "@/components/fuel/MealSuggester";
 import { useNutritionStore } from "@/lib/store/useNutritionStore";
 import { GYM_DAYS } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
@@ -72,6 +73,8 @@ export default function FuelPage() {
           Hit protein. Don't chase carbs blindly. Creatine non-negotiable.
         </p>
       </motion.div>
+
+      <MealSuggester />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <MacroRingCard />
