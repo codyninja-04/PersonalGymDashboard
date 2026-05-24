@@ -1,0 +1,142 @@
+"use client";
+
+import { create } from "zustand";
+import type { MealEntry } from "@/types/nutrition";
+import type { DBDailyFuel } from "@/types/db";
+import { ANAND_NUTRITION } from "@/lib/data/seedData";
+import { GYM_DAYS } from "@/lib/data/workoutSplits";
+import { getDayKey } from "@/lib/utils/formatting";
+import { saveFuelAction } from "@/app/actions/fuel";
+
+interface Macros {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+interface NutritionState {
+  targets: Macros;
+  today: Macros;
+  mealLog: MealEntry[];
+  creatineTaken: boolean;
+  waterLiters: number;
+  todayKey: string;
+  hydrated: boolean;
+
+  hydrate: (fuel: DBDailyFuel | null) => void;
+  logMeal: (meal: Omit<MealEntry, "id" | "timestamp">) => Promise<void>;
+  deleteMeal: (id: string) => Promise<void>;
+  toggleCreatine: () => Promise<void>;
+  setWater: (liters: number) => Promise<void>;
+}
+
+function isGymDay(): boolean {
+  return GYM_DAYS.includes(getDayKey());
+}
+
+function targets(): Macros {
+  return isGymDay() ? ANAND_NUTRITION.gymDays : ANAND_NUTRITION.restDays;
+}
+
+function emptyMacros(): Macros {
+  return { calories: 0, protein: 0, carbs: 0, fats: 0 };
+}
+
+export const useNutritionStore = create<NutritionState>()((set, get) => ({
+  targets: targets(),
+  today: emptyMacros(),
+  mealLog: [],
+  creatineTaken: false,
+  waterLiters: 0,
+  todayKey: new Date().toISOString().slice(0, 10),
+  hydrated: false,
+
+  hydrate: (fuel) => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (!fuel) {
+      set({
+        targets: targets(),
+        today: emptyMacros(),
+        mealLog: [],
+        creatineTaken: false,
+        waterLiters: 0,
+        todayKey: today,
+        hydrated: true,
+      });
+      return;
+    }
+    set({
+      targets: targets(),
+      today: {
+        calories: fuel.calories,
+        protein: fuel.protein,
+        carbs: fuel.carbs,
+        fats: fuel.fats,
+      },
+      mealLog: (fuel.meals as MealEntry[]) ?? [],
+      creatineTaken: fuel.creatine_taken,
+      waterLiters: Number(fuel.water_liters),
+      todayKey: today,
+      hydrated: true,
+    });
+  },
+
+  logMeal: async (meal) => {
+    const entry: MealEntry = {
+      ...meal,
+      id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      timestamp: new Date().toISOString(),
+    };
+    set((s) => ({
+      mealLog: [...s.mealLog, entry],
+      today: {
+        calories: s.today.calories + meal.calories,
+        protein: s.today.protein + meal.protein,
+        carbs: s.today.carbs + meal.carbs,
+        fats: s.today.fats + meal.fats,
+      },
+    }));
+    await persistFuel(get);
+  },
+
+  deleteMeal: async (id) => {
+    set((s) => {
+      const meal = s.mealLog.find((m) => m.id === id);
+      if (!meal) return s;
+      return {
+        mealLog: s.mealLog.filter((m) => m.id !== id),
+        today: {
+          calories: Math.max(0, s.today.calories - meal.calories),
+          protein: Math.max(0, s.today.protein - meal.protein),
+          carbs: Math.max(0, s.today.carbs - meal.carbs),
+          fats: Math.max(0, s.today.fats - meal.fats),
+        },
+      };
+    });
+    await persistFuel(get);
+  },
+
+  toggleCreatine: async () => {
+    set((s) => ({ creatineTaken: !s.creatineTaken }));
+    await persistFuel(get);
+  },
+
+  setWater: async (liters) => {
+    set({ waterLiters: Math.max(0, Math.min(6, liters)) });
+    await persistFuel(get);
+  },
+}));
+
+async function persistFuel(get: () => NutritionState) {
+  const s = get();
+  await saveFuelAction({
+    calories: s.today.calories,
+    protein: s.today.protein,
+    carbs: s.today.carbs,
+    fats: s.today.fats,
+    water_liters: s.waterLiters,
+    creatine_taken: s.creatineTaken,
+    meals: s.mealLog,
+  });
+}
