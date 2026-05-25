@@ -8,9 +8,9 @@ import { signInAction, signUpAction } from "@/app/auth/actions";
 
 type Mode = "signin" | "signup";
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: string }) {
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
   const [message, setMessage] = useState<string | null>(null);
 
   function submit(formData: FormData) {
