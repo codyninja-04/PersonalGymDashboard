@@ -16,6 +16,8 @@ export interface DBProfile {
   updated_at: string;
   phase_started_at?: string | null;
   last_deload_at?: string | null;
+  split?: unknown | null;
+  split_template?: string | null;
 }
 
 export interface DBBodyMeasurement {

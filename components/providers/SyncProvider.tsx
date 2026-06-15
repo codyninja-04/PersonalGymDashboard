@@ -3,7 +3,17 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store/useAppStore";
 import { useNutritionStore } from "@/lib/store/useNutritionStore";
+import { useSplitStore, type WeekMap } from "@/lib/store/useSplitStore";
 import type { SyncBundle } from "@/app/actions/fetch";
+
+function isValidSplit(value: unknown): value is WeekMap {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    "monday" in (value as Record<string, unknown>) &&
+    Array.isArray((value as WeekMap).monday?.exercises)
+  );
+}
 
 export function SyncProvider({
   bundle,
@@ -23,7 +33,21 @@ export function SyncProvider({
     done.current = true;
     hydrateApp(bundle);
     hydrateNutrition(bundle.todayFuel);
-  }, [bundle, hydrateApp, hydrateNutrition]);
+
+    // Pull the saved split from the account. Apply it after the local cache
+    // has rehydrated so the server copy wins across devices.
+    const serverSplit = bundle.profile?.split;
+    if (isValidSplit(serverSplit)) {
+      const templateId = bundle.profile?.split_template ?? "custom";
+      const apply = () => {
+        useSplitStore.getState().hydrateFromServer(serverSplit, templateId);
+        // Gym vs rest days may differ now, so re-cycle the macro targets.
+        recomputeTargets(useAppStore.getState().user);
+      };
+      if (useSplitStore.persist.hasHydrated()) apply();
+      else useSplitStore.persist.onFinishHydration(apply);
+    }
+  }, [bundle, hydrateApp, hydrateNutrition, recomputeTargets]);
 
   // Recompute nutrition targets whenever the user profile (phase / weight) changes
   useEffect(() => {

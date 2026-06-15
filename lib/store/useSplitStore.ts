@@ -11,8 +11,19 @@ import {
 } from "@/lib/data/workoutSplits";
 import { EXERCISE_LIBRARY } from "@/lib/data/exerciseLibrary";
 import { getTemplate } from "@/lib/data/splitTemplates";
+import { saveSplitAction } from "@/app/actions/split";
 
 type WeekMap = Record<DayKey, WorkoutDay>;
+
+// Debounced push to Supabase so the split follows the user across devices.
+let pushTimer: ReturnType<typeof setTimeout> | null = null;
+function schedulePush(days: WeekMap, templateId: string) {
+  if (typeof window === "undefined") return;
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    void saveSplitAction({ days, template_id: templateId }).catch(() => {});
+  }, 800);
+}
 
 function clone(days: WeekMap): WeekMap {
   return JSON.parse(JSON.stringify(days)) as WeekMap;
@@ -39,6 +50,7 @@ interface SplitState {
 
   applyTemplate: (id: string) => void;
   resetToDefault: () => void;
+  hydrateFromServer: (days: WeekMap, templateId: string) => void;
   renameDay: (key: DayKey, name: string) => void;
   setDayType: (key: DayKey, type: WorkoutDay["type"]) => void;
   toggleRest: (key: DayKey) => void;
@@ -51,6 +63,7 @@ interface SplitState {
 
 function markCustom(set: (partial: Partial<SplitState>) => void, days: WeekMap) {
   set({ days, templateId: "custom" });
+  schedulePush(days, "custom");
 }
 
 export const useSplitStore = create<SplitState>()(
@@ -63,10 +76,19 @@ export const useSplitStore = create<SplitState>()(
       applyTemplate: (id) => {
         const template = getTemplate(id);
         if (!template) return;
-        set({ days: clone(template.days), templateId: id });
+        const days = clone(template.days);
+        set({ days, templateId: id });
+        schedulePush(days, id);
       },
 
-      resetToDefault: () => set({ days: clone(ANAND_SPLITS), templateId: "carve" }),
+      resetToDefault: () => {
+        const days = clone(ANAND_SPLITS);
+        set({ days, templateId: "carve" });
+        schedulePush(days, "carve");
+      },
+
+      // Server is the source of truth on load — apply it without echoing a push.
+      hydrateFromServer: (days, templateId) => set({ days, templateId }),
 
       renameDay: (key, name) => {
         const days = clone(get().days);

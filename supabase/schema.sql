@@ -21,6 +21,9 @@ create table if not exists public.profiles (
 );
 alter table public.profiles add column if not exists phase_started_at timestamptz default now();
 alter table public.profiles add column if not exists last_deload_at timestamptz;
+-- Custom workout split, synced across the user's devices.
+alter table public.profiles add column if not exists split jsonb;
+alter table public.profiles add column if not exists split_template text;
 
 -- ============================================================================
 -- WEIGHT HISTORY
