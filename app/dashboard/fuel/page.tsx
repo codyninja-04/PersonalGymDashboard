@@ -11,7 +11,8 @@ import { MealSuggester } from "@/components/fuel/MealSuggester";
 import { MacroCyclingChart } from "@/components/fuel/MacroCyclingChart";
 import { useNutritionStore } from "@/lib/store/useNutritionStore";
 import { useAppStore } from "@/lib/store/useAppStore";
-import { GYM_DAYS } from "@/lib/data/workoutSplits";
+import { useSplitStore } from "@/lib/store/useSplitStore";
+import { gymDaysOf } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
 import { getPhase } from "@/lib/data/phases";
 
@@ -30,8 +31,9 @@ export default function FuelPage() {
   const recentFuel = useAppStore((s) => s.recentFuel);
   const userPhase = useAppStore((s) => s.user.phase);
   const phase = getPhase(userPhase);
+  const splitDays = useSplitStore((s) => s.days);
 
-  const isGym = GYM_DAYS.includes(getDayKey());
+  const isGym = gymDaysOf(splitDays).includes(getDayKey());
 
   const [name, setName] = useState("");
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]>("snack");

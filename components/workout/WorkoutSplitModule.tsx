@@ -7,8 +7,9 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ExerciseRow } from "./ExerciseRow";
 import { AutoScaleButton } from "./AutoScaleButton";
-import { ANAND_SPLITS } from "@/lib/data/workoutSplits";
+import type { DayKey } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
+import { useSplitStore } from "@/lib/store/useSplitStore";
 import { useWorkoutStore } from "@/lib/store/useWorkoutStore";
 import { useAppStore } from "@/lib/store/useAppStore";
 import { cn } from "@/lib/utils/formatting";
@@ -43,7 +44,7 @@ const SUGGESTED_WEIGHTS: Record<string, number> = {
 
 const OVERLOAD_EXERCISES = new Set(["incline-press", "weighted-pullup", "seated-ohp"]);
 
-const DAY_LABELS: Array<{ key: keyof typeof ANAND_SPLITS; short: string }> = [
+const DAY_LABELS: Array<{ key: DayKey; short: string }> = [
   { key: "monday", short: "M" },
   { key: "tuesday", short: "T" },
   { key: "wednesday", short: "W" },
@@ -55,9 +56,10 @@ const DAY_LABELS: Array<{ key: keyof typeof ANAND_SPLITS; short: string }> = [
 
 export function WorkoutSplitModule() {
   const today = getDayKey();
-  const [previewKey, setPreviewKey] = useState<keyof typeof ANAND_SPLITS>(today);
+  const days = useSplitStore((s) => s.days);
+  const [previewKey, setPreviewKey] = useState<DayKey>(today);
   const isPreview = previewKey !== today;
-  const split = ANAND_SPLITS[previewKey];
+  const split = days[previewKey];
 
   const sets = useWorkoutStore((s) => s.sets);
   const sessionStarted = useWorkoutStore((s) => !!s.sessionStartedAt);
@@ -119,7 +121,7 @@ export function WorkoutSplitModule() {
       {/* Day picker chip row */}
       <div className="hairline-bottom flex flex-wrap gap-1 px-5 pb-3">
         {DAY_LABELS.map(({ key, short }) => {
-          const s = ANAND_SPLITS[key];
+          const s = days[key];
           const isToday = key === today;
           const isActive = key === previewKey;
           return (

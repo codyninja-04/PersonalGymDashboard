@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Command } from "lucide-react";
+import { Search, Command, HelpCircle } from "lucide-react";
 import { useAppStore } from "@/lib/store/useAppStore";
+import { useTutorialStore } from "@/lib/store/useTutorialStore";
 import { CommandPalette } from "./CommandPalette";
 import { NotificationDropdown } from "./NotificationDropdown";
 
@@ -31,6 +32,7 @@ function getSubtext() {
 
 export function TopBar() {
   const user = useAppStore((s) => s.user);
+  const startTour = useTutorialStore((s) => s.start);
   const [time, setTime] = useState<string>("--:--:--");
   const [subtext] = useState(getSubtext);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -99,6 +101,14 @@ export function TopBar() {
             aria-label="Search"
           >
             <Search className="h-4 w-4" />
+          </button>
+          <button
+            onClick={startTour}
+            className="grid h-9 w-9 place-items-center border border-border-subtle bg-[var(--color-bg-elevated)] text-text-secondary transition hover:border-border-strong hover:text-text-primary"
+            aria-label="Replay walkthrough"
+            title="Replay walkthrough"
+          >
+            <HelpCircle className="h-4 w-4" />
           </button>
           <NotificationDropdown />
         </div>

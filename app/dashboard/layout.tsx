@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { HydrationGate } from "@/components/ui/HydrationGate";
 import { SyncProvider } from "@/components/providers/SyncProvider";
+import { TutorialOverlay } from "@/components/onboarding/TutorialOverlay";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { fetchSyncBundle } from "@/app/actions/fetch";
 
@@ -35,6 +36,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
           </main>
           <MobileNav />
+          <TutorialOverlay />
         </div>
       </HydrationGate>
     </SyncProvider>

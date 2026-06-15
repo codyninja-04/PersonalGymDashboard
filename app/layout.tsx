@@ -28,9 +28,9 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FORGE · ANAND",
+  title: "FORGE · Train. Fuel. Track.",
   description:
-    "Cinematic hypertrophy dashboard. Lift heavy. Eat clean. Earn the mirror.",
+    "Your training, food, and body in one cinematic dashboard. Lift heavy. Eat clean. Earn the mirror.",
 };
 
 export const viewport: Viewport = {

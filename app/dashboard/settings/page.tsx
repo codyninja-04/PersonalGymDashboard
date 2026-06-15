@@ -10,6 +10,8 @@ import { useAppStore } from "@/lib/store/useAppStore";
 import { useBodyMetrics } from "@/hooks/useBodyMetrics";
 import { updateProfileAction } from "@/app/actions/profile";
 import { PhaseSelector } from "@/components/settings/PhaseSelector";
+import { SplitBuilder } from "@/components/settings/SplitBuilder";
+import { TutorialReplayButton } from "@/components/onboarding/TutorialReplayButton";
 
 export default function SettingsPage() {
   const user = useAppStore((s) => s.user);
@@ -126,28 +128,22 @@ export default function SettingsPage() {
                 onChange={(v) => setForm({ ...form, current_weight_kg: v })}
               />
               <NumField
-                label="Body Fat (0–1)"
-                value={form.estimated_bf}
-                step={0.001}
-                onChange={(v) => setForm({ ...form, estimated_bf: v })}
+                label="Body Fat %"
+                value={Math.round(form.estimated_bf * 1000) / 10}
+                step={0.1}
+                onChange={(v) => setForm({ ...form, estimated_bf: (v || 0) / 100 })}
               />
               <NumField
-                label="Target BF (0–1)"
-                value={form.target_bf}
-                step={0.001}
-                onChange={(v) => setForm({ ...form, target_bf: v })}
+                label="Target BF %"
+                value={Math.round(form.target_bf * 1000) / 10}
+                step={0.1}
+                onChange={(v) => setForm({ ...form, target_bf: (v || 0) / 100 })}
               />
               <SelectField
                 label="Goal"
                 value={form.goal}
                 options={["recomp", "cut", "bulk"]}
                 onChange={(v) => setForm({ ...form, goal: v as typeof form.goal })}
-              />
-              <TextField
-                label="Phase label"
-                value={form.phase}
-                onChange={(v) => setForm({ ...form, phase: v })}
-                wide
               />
             </div>
           </CardBody>
@@ -173,6 +169,8 @@ export default function SettingsPage() {
 
       <PhaseSelector />
 
+      <SplitBuilder />
+
       <Card>
         <CardHeader
           eyebrow="objectives · long horizon"
@@ -182,9 +180,22 @@ export default function SettingsPage() {
         </CardHeader>
         <CardBody>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Mission step="01" title="Reach target BF" desc="Cut phase complete. Visible abs. Sustainable maintenance setpoint." accent="var(--color-bone)" />
-            <Mission step="02" title="Restore legs" desc="Injury heals → reintroduce squat/RDL once medically cleared." accent="var(--color-chrome)" />
-            <Mission step="03" title="Lean bulk +4kg" desc="Slow surplus, +0.25kg/wk. Hold BF under 16%." accent="var(--color-cream)" />
+            <Mission step="01" title="Hit your target BF" desc="Lock in a body fat you can hold year-round. Visible progress, sustainable setpoint." accent="var(--color-bone)" />
+            <Mission step="02" title="Stay consistent" desc="Train your split, log your food, show up on the days that count. Streaks build physiques." accent="var(--color-chrome)" />
+            <Mission step="03" title="Get stronger over time" desc="Add reps or weight every week you can. Progressive overload is the whole game." accent="var(--color-cream)" />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader eyebrow="help · onboarding">New here, or want a refresher?</CardHeader>
+        <CardBody>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="max-w-md text-[13px] text-text-secondary">
+              Replay the quick walkthrough any time. It covers every page and how the dashboard
+              adapts to your numbers.
+            </p>
+            <TutorialReplayButton />
           </div>
         </CardBody>
       </Card>

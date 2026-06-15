@@ -3,11 +3,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { SetLog, SetStatus, WorkoutSession } from "@/types/workout";
-import { ANAND_SPLITS } from "@/lib/data/workoutSplits";
+import type { DayKey } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
+import { getSplitDays } from "@/lib/store/useSplitStore";
 
 interface WorkoutState {
-  todaysSplitKey: keyof typeof ANAND_SPLITS;
+  todaysSplitKey: DayKey;
   sets: Record<string, SetLog[]>;
   sessionStartedAt: string | null;
   sessionDate: string | null;
@@ -89,7 +90,7 @@ export const useWorkoutStore = create<WorkoutState>()(
       finishSession: () => {
         const s = get();
         const key = s.todaysSplitKey;
-        const split = ANAND_SPLITS[key];
+        const split = getSplitDays()[key];
         const allSets = Object.values(s.sets).flat();
         const volume = allSets.reduce((acc, log) => acc + log.weight * log.reps, 0);
         const session: WorkoutSession = {

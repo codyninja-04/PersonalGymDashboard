@@ -77,4 +77,42 @@ export const ANAND_SPLITS: Record<WorkoutDay["key"], WorkoutDay> = {
   sunday: { key: "sunday", name: "Rest Day", type: "Rest", exercises: [], isRest: true },
 };
 
-export const GYM_DAYS: Array<WorkoutDay["key"]> = ["monday", "wednesday", "friday", "saturday"];
+/** The split a brand-new account starts on (the original Carve). */
+export const DEFAULT_SPLITS = ANAND_SPLITS;
+
+export type DayKey = WorkoutDay["key"];
+
+export const DAY_KEYS: DayKey[] = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
+
+export const DAY_SHORT: Record<DayKey, string> = {
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
+};
+
+/** A day counts as a training day when it isn't flagged rest and has at least one exercise. */
+export function isTrainingDay(day: WorkoutDay | undefined): boolean {
+  return !!day && !day.isRest && day.exercises.length > 0;
+}
+
+/** Derive the training-day keys from any week map (used for macro cycling). */
+export function gymDaysOf(days: Record<DayKey, WorkoutDay>): DayKey[] {
+  return DAY_KEYS.filter((k) => isTrainingDay(days[k]));
+}
+
+/** Static default, kept for the seed user. Live gym days come from the split store. */
+export const GYM_DAYS: DayKey[] = gymDaysOf(ANAND_SPLITS);
+
+export { ex as buildExercise };

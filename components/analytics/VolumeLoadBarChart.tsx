@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import { Layers } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { useAppStore } from "@/lib/store/useAppStore";
-import { ANAND_SPLITS } from "@/lib/data/workoutSplits";
+import { useSplitStore, type WeekMap } from "@/lib/store/useSplitStore";
+import type { DayKey } from "@/lib/data/workoutSplits";
 import type { MuscleGroup } from "@/types/workout";
 
 const TARGET_GROUPS: MuscleGroup[] = [
   "Chest",
   "Back",
+  "Legs",
   "Shoulders",
   "Triceps",
   "Biceps",
@@ -24,7 +26,8 @@ interface RowDatum {
 }
 
 function syntheticVolumeFromSessions(
-  sessions: { splitKey: keyof typeof ANAND_SPLITS; totalVolumeKg: number }[],
+  sessions: { splitKey: DayKey; totalVolumeKg: number }[],
+  days: WeekMap,
 ): RowDatum[] {
   const acc: Record<MuscleGroup, number> = {
     Chest: 0,
@@ -37,7 +40,7 @@ function syntheticVolumeFromSessions(
     Legs: 0,
   };
   for (const s of sessions) {
-    const split = ANAND_SPLITS[s.splitKey];
+    const split = days[s.splitKey];
     if (!split) continue;
     const exercises = split.exercises;
     const totalSetsBase = exercises.reduce((a, e) => a + e.sets, 0) || 1;
@@ -58,9 +61,14 @@ function syntheticVolumeFromSessions(
 
 export function VolumeLoadBarChart() {
   const sessions = useAppStore((s) => s.weekPlan.sessions);
-  const data = useMemo(() => syntheticVolumeFromSessions(sessions.slice(-7)), [sessions]);
+  const days = useSplitStore((s) => s.days);
+  const data = useMemo(
+    () => syntheticVolumeFromSessions(sessions.slice(-7), days),
+    [sessions, days],
+  );
   const max = Math.max(...data.map((d) => d.volume), 1);
   const total = data.reduce((a, b) => a + b.volume, 0);
+  const trained = data.filter((d) => d.volume > 0);
 
   return (
     <Card className="h-full">
@@ -118,8 +126,8 @@ export function VolumeLoadBarChart() {
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-border-subtle/50 pt-3 font-mono text-[10px] uppercase tracking-[0.14em]">
-          <span className="text-text-muted">Top mover: <span className="text-[var(--color-accent-primary)]">{data[0]?.muscle}</span></span>
-          <span className="text-text-muted">no legs · injury hold</span>
+          <span className="text-text-muted">Top mover: <span className="text-[var(--color-accent-primary)]">{data[0]?.muscle ?? "—"}</span></span>
+          <span className="text-text-muted">{trained.length} groups hit this week</span>
         </div>
       </CardBody>
     </Card>

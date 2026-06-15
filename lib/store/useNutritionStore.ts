@@ -4,7 +4,7 @@ import { create } from "zustand";
 import type { MealEntry } from "@/types/nutrition";
 import type { DBDailyFuel } from "@/types/db";
 import type { UserProfile } from "@/types/user";
-import { GYM_DAYS } from "@/lib/data/workoutSplits";
+import { getActiveGymDays } from "@/lib/store/useSplitStore";
 import { getDayKey } from "@/lib/utils/formatting";
 import { saveFuelAction } from "@/app/actions/fuel";
 import { macrosForToday, type MacroTargets } from "@/lib/calculations/macros";
@@ -28,7 +28,7 @@ interface NutritionState {
 }
 
 function isGymDay(): boolean {
-  return GYM_DAYS.includes(getDayKey());
+  return getActiveGymDays().includes(getDayKey());
 }
 
 function emptyMacros(): MacroTargets {

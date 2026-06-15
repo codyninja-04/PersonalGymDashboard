@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Dumbbell, Calendar, Command } from "lucide-react";
-import { ANAND_SPLITS } from "@/lib/data/workoutSplits";
 import { EXERCISE_LIBRARY } from "@/lib/data/exerciseLibrary";
+import { useSplitStore } from "@/lib/store/useSplitStore";
 
 interface SearchResult {
   id: string;
@@ -14,34 +14,33 @@ interface SearchResult {
   category: string;
 }
 
-const buildIndex = (): SearchResult[] => {
-  const dayMap: Record<string, string[]> = {};
-  Object.entries(ANAND_SPLITS).forEach(([dayKey, split]) => {
-    split.exercises.forEach((ex) => {
-      dayMap[ex.id] = dayMap[ex.id] ?? [];
-      if (!dayMap[ex.id].includes(dayKey)) dayMap[ex.id].push(dayKey);
-    });
-  });
-  return Object.values(EXERCISE_LIBRARY).map((ex) => ({
-    id: ex.id,
-    name: ex.name,
-    primary: ex.primary,
-    days: dayMap[ex.id] ?? [],
-    category: ex.category,
-  }));
-};
-
-const INDEX = buildIndex();
-
 interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
 }
 
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
+  const splitDays = useSplitStore((s) => s.days);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const INDEX = useMemo<SearchResult[]>(() => {
+    const dayMap: Record<string, string[]> = {};
+    Object.entries(splitDays).forEach(([dayKey, split]) => {
+      split.exercises.forEach((ex) => {
+        dayMap[ex.id] = dayMap[ex.id] ?? [];
+        if (!dayMap[ex.id].includes(dayKey)) dayMap[ex.id].push(dayKey);
+      });
+    });
+    return Object.values(EXERCISE_LIBRARY).map((ex) => ({
+      id: ex.id,
+      name: ex.name,
+      primary: ex.primary,
+      days: dayMap[ex.id] ?? [],
+      category: ex.category,
+    }));
+  }, [splitDays]);
 
   useEffect(() => {
     if (open) {
@@ -60,7 +59,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         r.primary.toLowerCase().includes(q) ||
         r.id.includes(q.replace(/\s+/g, "-")),
     ).slice(0, 30);
-  }, [query]);
+  }, [query, INDEX]);
 
   useEffect(() => {
     if (active >= results.length) setActive(0);

@@ -4,8 +4,9 @@ import { useMemo } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, ReferenceLine, Tooltip, Cell } from "recharts";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { useAppStore } from "@/lib/store/useAppStore";
+import { useSplitStore } from "@/lib/store/useSplitStore";
 import { computeMacros } from "@/lib/calculations/macros";
-import { GYM_DAYS } from "@/lib/data/workoutSplits";
+import { gymDaysOf } from "@/lib/data/workoutSplits";
 import { getDayKey } from "@/lib/utils/formatting";
 import type { DBDailyFuel } from "@/types/db";
 
@@ -43,6 +44,8 @@ const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: Tooltip
 
 export function MacroCyclingChart({ recentFuel }: { recentFuel: DBDailyFuel[] }) {
   const user = useAppStore((s) => s.user);
+  const days = useSplitStore((s) => s.days);
+  const gymDays = useMemo(() => gymDaysOf(days), [days]);
 
   const data = useMemo(() => {
     const macros = computeMacros(user);
@@ -59,7 +62,7 @@ export function MacroCyclingChart({ recentFuel }: { recentFuel: DBDailyFuel[] })
       d.setDate(today.getDate() - i);
       const iso = d.toISOString().slice(0, 10);
       const dayName = (["sunday","monday","tuesday","wednesday","thursday","friday","saturday"] as const)[d.getDay()];
-      const isGym = GYM_DAYS.includes(dayName);
+      const isGym = gymDays.includes(dayName);
       const fuel = recentFuel.find((f) => f.date === iso);
       const target = isGym ? macros.gym.calories : macros.rest.calories;
       days.push({
@@ -71,10 +74,10 @@ export function MacroCyclingChart({ recentFuel }: { recentFuel: DBDailyFuel[] })
       });
     }
     return days;
-  }, [recentFuel, user]);
+  }, [recentFuel, user, gymDays]);
 
   const macros = computeMacros(user);
-  const todayIsGym = GYM_DAYS.includes(getDayKey());
+  const todayIsGym = gymDays.includes(getDayKey());
   const todayTarget = todayIsGym ? macros.gym.calories : macros.rest.calories;
 
   const totalActual = data.reduce((s, d) => s + d.calories, 0);
