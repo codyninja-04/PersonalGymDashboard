@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
-import { signInAction, signInWithGoogleAction, signUpAction } from "@/app/auth/actions";
+import { signInAction, signUpAction } from "@/app/auth/actions";
 
 type Mode = "signin" | "signup";
 
@@ -21,15 +21,6 @@ export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: st
         mode === "signin" ? await signInAction(formData) : await signUpAction(formData);
       if (result?.error) setError(result.error);
       if (result?.message) setMessage(result.message);
-    });
-  }
-
-  function continueWithGoogle() {
-    setError(null);
-    setMessage(null);
-    startTransition(async () => {
-      const result = await signInWithGoogleAction();
-      if (result?.error) setError(result.error);
     });
   }
 
@@ -82,23 +73,7 @@ export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: st
             &ldquo;{mode === "signin" ? "Show up on the days you don't want to." : "It's never too late to start."}&rdquo;
           </p>
 
-          <button
-            type="button"
-            onClick={continueWithGoogle}
-            disabled={pending}
-            className="mt-6 inline-flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-border-strong bg-[var(--color-bg-elevated)] font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-text-primary transition hover:border-[var(--color-bone)] hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-60"
-          >
-            <GoogleGlyph className="h-4 w-4" />
-            {mode === "signin" ? "continue with google" : "sign up with google"}
-          </button>
-
-          <div className="my-5 flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.32em] text-text-dim">
-            <div className="h-px flex-1 bg-border-subtle/60" />
-            or
-            <div className="h-px flex-1 bg-border-subtle/60" />
-          </div>
-
-          <form action={submit} className="space-y-3">
+          <form action={submit} className="mt-6 space-y-3">
             {mode === "signup" && (
               <Field
                 icon={<User className="h-4 w-4" />}
@@ -191,29 +166,6 @@ export function AuthForm({ mode, initialError }: { mode: Mode; initialError?: st
         </motion.div>
       </div>
     </div>
-  );
-}
-
-function GoogleGlyph({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
-      <path
-        fill="#FFC107"
-        d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C33.4 5.3 29 3.5 24 3.5 12.7 3.5 3.5 12.7 3.5 24S12.7 44.5 24 44.5c11.9 0 20.5-8.6 20.5-20.5 0-1.2-.1-2.3-.4-3.5z"
-      />
-      <path
-        fill="#FF3D00"
-        d="M5.6 13.7l5.9 4.3c1.6-3.9 5.4-6.7 9.9-6.7 3 0 5.8 1.1 7.9 3l5-5C30.4 6.3 26 4.5 21 4.5 13.2 4.5 6.5 8.6 5.6 13.7z"
-      />
-      <path
-        fill="#4CAF50"
-        d="M24 44.5c4.9 0 9.3-1.8 12.6-4.8l-5.8-4.9c-1.9 1.3-4.3 2.1-6.8 2.1-5.8 0-10.7-3.9-11.6-7.1l-5.9 4.6C8.6 39.7 15.7 44.5 24 44.5z"
-      />
-      <path
-        fill="#1976D2"
-        d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.8-3.6 5.1l5.8 4.9c-.4.4 6.4-4.7 6.4-14 0-1.2-.1-2.3-.4-3z"
-      />
-    </svg>
   );
 }
 
