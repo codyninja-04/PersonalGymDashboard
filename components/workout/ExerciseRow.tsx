@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, Clock, Skull, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Clock, Skull, Loader2, History } from "lucide-react";
 import type { Exercise, SetLog, SetStatus } from "@/types/workout";
 import { Badge } from "@/components/ui/Badge";
+import { Sparkline } from "@/components/ui/Sparkline";
 import { ProgressiveOverloadBadge } from "./ProgressiveOverloadBadge";
 import { ExerciseSwapButton } from "./ExerciseSwapButton";
 import { useWorkoutStore } from "@/lib/store/useWorkoutStore";
-import { cn } from "@/lib/utils/formatting";
+import { useAppStore } from "@/lib/store/useAppStore";
+import { useRestTimerStore } from "@/lib/store/useRestTimerStore";
+import { exerciseTopSetSeries } from "@/lib/calculations/exerciseHistory";
+import { cn, formatRelativeDate } from "@/lib/utils/formatting";
 
 interface ExerciseRowProps {
   exercise: Exercise;
@@ -26,6 +30,17 @@ export function ExerciseRow({ exercise, suggestedWeight = 0, showOverload = fals
   const sets = setsMap[exercise.id] ?? EMPTY_SETS;
   const logSet = useWorkoutStore((s) => s.logSet);
   const markSetStatus = useWorkoutStore((s) => s.markSetStatus);
+  const startRest = useRestTimerStore((s) => s.start);
+
+  // Per-exercise history from completed sessions.
+  const sessions = useAppStore((s) => s.weekPlan.sessions);
+  const history = useMemo(
+    () => exerciseTopSetSeries(exercise.id, sessions),
+    [exercise.id, sessions],
+  );
+  const last = history.length ? history[history.length - 1] : null;
+  // Prefer your real last working weight as the target, then the curated suggestion.
+  const target = last && last.weight > 0 ? last.weight : suggestedWeight;
 
   const status: SetStatus = (() => {
     if (sets.length === 0) return "pending";
@@ -75,8 +90,8 @@ export function ExerciseRow({ exercise, suggestedWeight = 0, showOverload = fals
             <span className="flex items-center gap-1">
               <Clock className="h-2.5 w-2.5" /> {exercise.restSec}s
             </span>
-            {suggestedWeight > 0 && (
-              <span className="text-[var(--color-cream)]">target {suggestedWeight}kg</span>
+            {target > 0 && (
+              <span className="text-[var(--color-cream)]">target {target}kg</span>
             )}
           </div>
         </div>
@@ -101,6 +116,36 @@ export function ExerciseRow({ exercise, suggestedWeight = 0, showOverload = fals
             className="overflow-hidden"
           >
             <div className="border-t border-border-subtle px-4 py-4">
+              {/* Per-exercise history */}
+              {last ? (
+                <div className="mb-3 flex items-center justify-between gap-3 border border-border-subtle bg-[var(--color-bg-base)] px-3 py-2.5">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-text-dim">
+                      <History className="h-3 w-3" /> last time · {formatRelativeDate(last.date)}
+                    </div>
+                    <div className="mt-0.5 text-[13px] font-semibold text-text-primary num">
+                      {last.weight}kg × {last.reps}
+                      <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+                        est 1RM {last.estOneRM}kg
+                      </span>
+                    </div>
+                  </div>
+                  {history.length >= 2 && (
+                    <Sparkline
+                      data={history.map((h) => h.estOneRM)}
+                      width={96}
+                      height={32}
+                      stroke="var(--color-cream)"
+                      fill="var(--color-cream)"
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="mb-3 border border-dashed border-border-subtle px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim">
+                  no history yet · log a set to start the trend
+                </div>
+              )}
+
               <div className="mb-3 flex items-center justify-end">
                 <ExerciseSwapButton
                   exerciseName={exercise.name}
@@ -121,10 +166,11 @@ export function ExerciseRow({ exercise, suggestedWeight = 0, showOverload = fals
                     exerciseId={exercise.id}
                     setIndex={i}
                     existing={sets.find((s) => s.setIndex === i)}
-                    suggestedWeight={suggestedWeight}
+                    suggestedWeight={target}
                     repTarget={exercise.repRange[1]}
                     onLog={logSet}
                     onMark={markSetStatus}
+                    onRest={() => startRest(exercise.restSec, exercise.name)}
                   />
                 ))}
               </div>
@@ -144,6 +190,7 @@ function SetInput({
   repTarget,
   onLog,
   onMark,
+  onRest,
 }: {
   exerciseId: string;
   setIndex: number;
@@ -152,6 +199,7 @@ function SetInput({
   repTarget: number;
   onLog: (id: string, idx: number, reps: number, weight: number, rpe: number) => void;
   onMark: (id: string, idx: number, status: SetStatus) => void;
+  onRest?: () => void;
 }) {
   const [weight, setWeight] = useState(existing?.weight?.toString() ?? (suggestedWeight ? String(suggestedWeight) : ""));
   const [reps, setReps] = useState(existing?.reps?.toString() ?? "");
@@ -165,6 +213,7 @@ function SetInput({
     if (w === 0 || r === 0) return;
     onLog(exerciseId, setIndex, r, w, p);
     if (r >= repTarget) onMark(exerciseId, setIndex, "pr");
+    onRest?.();
   }
 
   return (

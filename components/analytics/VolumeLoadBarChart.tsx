@@ -6,8 +6,8 @@ import { Layers } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { useAppStore } from "@/lib/store/useAppStore";
 import { useSplitStore, type WeekMap } from "@/lib/store/useSplitStore";
-import type { DayKey } from "@/lib/data/workoutSplits";
-import type { MuscleGroup } from "@/types/workout";
+import { EXERCISE_LIBRARY } from "@/lib/data/exerciseLibrary";
+import type { MuscleGroup, WorkoutSession } from "@/types/workout";
 
 const TARGET_GROUPS: MuscleGroup[] = [
   "Chest",
@@ -25,32 +25,41 @@ interface RowDatum {
   volume: number;
 }
 
-function syntheticVolumeFromSessions(
-  sessions: { splitKey: DayKey; totalVolumeKg: number }[],
-  days: WeekMap,
-): RowDatum[] {
-  const acc: Record<MuscleGroup, number> = {
-    Chest: 0,
-    Back: 0,
-    Shoulders: 0,
-    Triceps: 0,
-    Biceps: 0,
-    Core: 0,
-    Forearms: 0,
-    Legs: 0,
-  };
+function emptyAcc(): Record<MuscleGroup, number> {
+  return { Chest: 0, Back: 0, Shoulders: 0, Triceps: 0, Biceps: 0, Core: 0, Forearms: 0, Legs: 0 };
+}
+
+function attribute(acc: Record<MuscleGroup, number>, primary: MuscleGroup, secondary: MuscleGroup[] | undefined, volume: number) {
+  if (secondary && secondary.length > 0) {
+    acc[primary] += volume * 0.7;
+    secondary.forEach((m) => {
+      acc[m] += (volume * 0.3) / secondary.length;
+    });
+  } else {
+    acc[primary] += volume;
+  }
+}
+
+function volumeFromSessions(sessions: WorkoutSession[], days: WeekMap): RowDatum[] {
+  const acc = emptyAcc();
   for (const s of sessions) {
-    const split = days[s.splitKey];
-    if (!split) continue;
-    const exercises = split.exercises;
-    const totalSetsBase = exercises.reduce((a, e) => a + e.sets, 0) || 1;
-    for (const ex of exercises) {
-      const share = (ex.sets / totalSetsBase) * s.totalVolumeKg;
-      acc[ex.primary] += share * 0.7;
-      if (ex.secondary) {
-        ex.secondary.forEach((m) => {
-          acc[m] += (share * 0.3) / ex.secondary!.length;
-        });
+    const logged = (s.sets ?? []).filter(
+      (set) => (set.status === "done" || set.status === "pr") && set.weight > 0 && set.reps > 0,
+    );
+    if (logged.length > 0) {
+      // Real logged sets — exact tonnage per movement.
+      for (const set of logged) {
+        const meta = EXERCISE_LIBRARY[set.exerciseId];
+        if (!meta) continue;
+        attribute(acc, meta.primary, meta.secondary, set.weight * set.reps);
+      }
+    } else {
+      // No set detail (seed/legacy) — estimate from the planned split.
+      const split = days[s.splitKey];
+      if (!split) continue;
+      const totalSetsBase = split.exercises.reduce((a, e) => a + e.sets, 0) || 1;
+      for (const ex of split.exercises) {
+        attribute(acc, ex.primary, ex.secondary, (ex.sets / totalSetsBase) * s.totalVolumeKg);
       }
     }
   }
@@ -63,7 +72,7 @@ export function VolumeLoadBarChart() {
   const sessions = useAppStore((s) => s.weekPlan.sessions);
   const days = useSplitStore((s) => s.days);
   const data = useMemo(
-    () => syntheticVolumeFromSessions(sessions.slice(-7), days),
+    () => volumeFromSessions(sessions.slice(-7), days),
     [sessions, days],
   );
   const max = Math.max(...data.map((d) => d.volume), 1);
